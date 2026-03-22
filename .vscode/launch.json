@@ -1,0 +1,48 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Debug CLI (Nike Example)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--company",
+                "Nike",
+                "--domain",
+                "nike.com"
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "justMyCode": true
+        },
+        {
+            "name": "Python: Debug CLI (IBM Example)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--company",
+                "IBM",
+                "--domain",
+                "ibm.com"
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "justMyCode": true
+        },
+        {
+            "name": "Python: Debug CLI (Prompt for Args)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "justMyCode": true
+        }
+    ]
+}
