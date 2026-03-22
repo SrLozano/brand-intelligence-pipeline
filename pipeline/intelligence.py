@@ -198,9 +198,10 @@ def _build_json_schema() -> dict:
                             "properties": {
                                 "name": {"type": "string"},
                                 "role": {"type": "string"},
-                                "source_url": {"type": "string"}
+                                "source_url": {"type": "string"},
+                                "source": {"type": "string"}
                             },
-                            "required": ["name", "role", "source_url"],
+                            "required": ["name", "role", "source_url", "source"],
                             "additionalProperties": False
                         }
                     },

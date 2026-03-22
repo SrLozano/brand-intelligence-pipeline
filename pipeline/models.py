@@ -64,7 +64,8 @@ class KeyPerson(BaseModel):
     """
     name: str
     role: str
-    source_url: str
+    source_url: str | None
+    source: str
 
 
 class LogoCandidate(BaseModel):

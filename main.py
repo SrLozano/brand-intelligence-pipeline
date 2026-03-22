@@ -10,7 +10,7 @@ import datetime
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
-from pipeline.scraper import scrape_domain
+from pipeline.scraper import scrape_domain, fetch_wikipedia
 from pipeline.models import BrandProfile, MetaData
 from pipeline.intelligence import extract_brand_signals
 from pipeline.discovery import discover_subdomains
@@ -40,6 +40,11 @@ def main() -> None:
     
     # Call scraper to get page data
     pages = scrape_domain(args.domain)
+    
+    # Also fetch Wikipedia page for additional context
+    wikipedia_page = fetch_wikipedia(args.company)
+    if wikipedia_page:
+        pages.append(wikipedia_page)
     
     # Extract brand signals using LLM
     brand_signals = extract_brand_signals(args.company, args.domain, pages)
