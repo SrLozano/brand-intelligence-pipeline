@@ -82,7 +82,7 @@ python main.py --company "Apple" --domain "apple.com"
 The pipeline generates a timestamped JSON file in the `output/` directory:
 
 ```
-output/brand_profile_2026-03-22_19-30-45.json
+output/brand_profile_company_2026-03-22_19-30-45.json
 ```
 
 ### What's Included
@@ -104,7 +104,7 @@ Brand profile generated for Nike
 - Scraped 3 page(s)
 - Extracted brand signals (description, 15 keywords, 3 people, 2 logo candidates)
 - Discovered 47 subdomain(s) via crt.sh
-- Output: output/brand_profile_2026-03-22_19-30-45.json
+- Output: output/brand_profile__nike_2026-03-22_19-30-45.json
 ```
 
 ## Troubleshooting
