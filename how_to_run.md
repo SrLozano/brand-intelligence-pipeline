@@ -82,7 +82,7 @@ python main.py --company "Apple" --domain "apple.com"
 The pipeline generates a timestamped JSON file in the `output/` directory:
 
 ```
-output/brand_profile_company_2026-03-22_19-30-45.json
+output/brand_profile_nike_2026-03-22_19-30-45.json
 ```
 
 ### What's Included
@@ -90,11 +90,12 @@ output/brand_profile_company_2026-03-22_19-30-45.json
 - **Company Information**: Name and domain
 - **Infrastructure**: Discovered subdomains from crt.sh
 - **Scraped Pages**: Content from homepage, about page, and Wikipedia
-- **Brand Signals**: 
+- **Brand Signals**:
   - Company description
   - Keywords
   - Key people
   - Logo candidates
+- **Downloaded Logos**: Top logo candidates saved to `output/assets/` directory
 - **Metadata**: Scraped URLs and generation timestamp
 
 ### Console Output
@@ -104,7 +105,7 @@ Brand profile generated for Nike
 - Scraped 3 page(s)
 - Extracted brand signals (description, 15 keywords, 3 people, 2 logo candidates)
 - Discovered 47 subdomain(s) via crt.sh
-- Output: output/brand_profile__nike_2026-03-22_19-30-45.json
+- Output: output/brand_profile_nike_2026-03-22_19-30-45.json
 ```
 
 ## Troubleshooting
@@ -151,8 +152,18 @@ chmod +w output/
 
 1. **Homepage** (`https://domain.com`)
 2. **About Page** (`https://domain.com/about`)
-3. **Wikipedia** (if available)
-4. **Subdomains** (via crt.sh certificate transparency logs)
+3. **Leadership Page** (`https://domain.com/leadership`)
+4. **Wikipedia** (if available)
+5. **Subdomains** (via crt.sh certificate transparency logs)
+
+## Logo Downloads
+
+The pipeline automatically downloads the top 3 logo candidates identified by the AI:
+
+- Saved to: `output/assets/`
+- Filename format: `{company}_logo_{index}_{timestamp}.{extension}`
+- The JSON output includes `local_path` field pointing to downloaded files
+- Only successful downloads are included in the output
 
 ## Notes
 
