@@ -76,6 +76,7 @@ class LogoCandidate(BaseModel):
     """
     url: str
     source_url: str
+    local_path: str | None = None
 
 
 class BrandSignals(BaseModel):
