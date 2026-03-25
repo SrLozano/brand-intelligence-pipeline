@@ -4,6 +4,9 @@
 # Mac OS
 .DS_Store
 
+# Output
+output/
+
 # Virtual environment
 venv/
 

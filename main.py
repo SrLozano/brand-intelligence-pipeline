@@ -71,27 +71,47 @@ def download_logo_candidates(brand_profile: BrandProfile, output_dir: Path, comp
             # Handle relative URLs by prepending https://
             url = 'https://' + url.lstrip('/')
         
-        # Infer file extension from URL
-        url_lower = logo.url.lower()
-        if '.svg' in url_lower:
-            ext = 'svg'
-        elif '.png' in url_lower:
-            ext = 'png'
-        elif '.jpg' in url_lower or '.jpeg' in url_lower:
-            ext = 'jpg'
-        elif '.webp' in url_lower:
-            ext = 'webp'
-        else:
-            ext = 'png'  # default
-        
-        # Define output file path with company name and timestamp
-        logo_filename = f"{safe_company}_logo_{idx}_{timestamp}.{ext}"
-        logo_path = assets_dir / logo_filename
-        
         # Download the logo
         try:
             response = requests.get(url, headers=headers, timeout=10)
             response.raise_for_status()
+            
+            # Detect file extension from Content-Type header first
+            content_type = response.headers.get('Content-Type', '').lower()
+            ext = None
+            
+            if 'image/svg' in content_type:
+                ext = 'svg'
+            elif 'image/png' in content_type:
+                ext = 'png'
+            elif 'image/jpeg' in content_type or 'image/jpg' in content_type:
+                ext = 'jpg'
+            elif 'image/webp' in content_type:
+                ext = 'webp'
+            elif 'image/gif' in content_type:
+                ext = 'gif'
+            
+            # Fallback to URL-based detection if Content-Type didn't help
+            if not ext:
+                url_lower = url.lower()
+                # Extract extension from URL path (before query params)
+                url_path = url_lower.split('?')[0].split('#')[0]
+                if url_path.endswith('.svg'):
+                    ext = 'svg'
+                elif url_path.endswith('.png'):
+                    ext = 'png'
+                elif url_path.endswith(('.jpg', '.jpeg')):
+                    ext = 'jpg'
+                elif url_path.endswith('.webp'):
+                    ext = 'webp'
+                elif url_path.endswith('.gif'):
+                    ext = 'gif'
+                else:
+                    ext = 'png'  # default
+            
+            # Define output file path with company name and timestamp
+            logo_filename = f"{safe_company}_logo_{idx}_{timestamp}.{ext}"
+            logo_path = assets_dir / logo_filename
             
             # Write the image to disk
             with open(logo_path, 'wb') as f:
@@ -170,7 +190,7 @@ def print_summary(brand_profile: BrandProfile, output_file: Path) -> None:
         count = len(brand_profile.infrastructure.discovered_subdomains)
         print(f"Subdomains:    {count} discovered via crt.sh")
     else:
-        print("Subdomains:    none found")
+        print("Subdomains:    none found. Try setting CRTSH_TIMEOUT to a higher value")
     
     print("-" * 30)
     print(f"Output written to {output_file}")

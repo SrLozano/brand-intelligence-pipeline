@@ -6,6 +6,7 @@ brand intelligence signals from scraped web content.
 """
 
 import os
+import json
 from openai import OpenAI
 from pipeline.models import PageData, BrandSignals, Keyword, KeyPerson, LogoCandidate
 
@@ -35,7 +36,8 @@ def extract_brand_signals(company: str, domain: str, pages: list[PageData]) -> B
         system_message = (
             "You are a brand intelligence extraction engine.\n"
             "Your job is to extract structured signals from raw web content.\n"
-            "Return only the requested JSON. No commentary."
+            "Return only the requested JSON. No commentary.\n"
+            "Use only english in your responses. Translate terms in other languages."
         )
         
         user_message = (
@@ -74,7 +76,6 @@ def extract_brand_signals(company: str, domain: str, pages: list[PageData]) -> B
             return None
             
         # Parse JSON and construct BrandSignals
-        import json
         data = json.loads(content)
         
         # Convert to Pydantic models

@@ -25,9 +25,9 @@
             "console": "integratedTerminal",
             "args": [
                 "--company",
-                "IBM",
+                "Redsift",
                 "--domain",
-                "ibm.com"
+                "redsift.com"
             ],
             "cwd": "${workspaceFolder}",
             "env": {},
