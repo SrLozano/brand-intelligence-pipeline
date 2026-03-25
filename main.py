@@ -107,6 +107,76 @@ def download_logo_candidates(brand_profile: BrandProfile, output_dir: Path, comp
             logo.local_path = None
 
 
+def print_summary(brand_profile: BrandProfile, output_file: Path) -> None:
+    """
+    Print a formatted summary of the brand profile to stdout.
+    
+    Args:
+        brand_profile: The brand profile to summarize
+        output_file: Path to the output JSON file
+    """
+    company = brand_profile.company
+    domain = brand_profile.input_domain
+    
+    print(f"\nBrand Profile: {company} ({domain})")
+    print("-" * 30)
+    
+    # Description
+    if brand_profile.brand_signals and brand_profile.brand_signals.description:
+        desc = brand_profile.brand_signals.description
+        if len(desc) > 80:
+            desc = desc[:77] + "..."
+        print(f"Description:   {desc}")
+    else:
+        print("Description:   none found")
+    
+    # Keywords
+    if brand_profile.brand_signals and brand_profile.brand_signals.keywords:
+        keywords = brand_profile.brand_signals.keywords
+        first_three = [kw.value for kw in keywords[:3]]
+        keywords_str = ", ".join(first_three)
+        if len(keywords) > 3:
+            keywords_str += f" (+ {len(keywords) - 3} more)"
+        print(f"Keywords:      {keywords_str}")
+    else:
+        print("Keywords:      none found")
+    
+    # Key people
+    if brand_profile.brand_signals and brand_profile.brand_signals.key_people:
+        people = brand_profile.brand_signals.key_people
+        people_strs = [f"{p.name} ({p.role})" for p in people]
+        people_str = ", ".join(people_strs)
+        # Get source from first person
+        source = people[0].source if people else ""
+        if source:
+            people_str += f"  [{source}]"
+        print(f"Key people:    {people_str}")
+    else:
+        print("Key people:    none found")
+    
+    # Logo
+    if brand_profile.brand_signals and brand_profile.brand_signals.logo_candidates:
+        top_logo = brand_profile.brand_signals.logo_candidates[0]
+        if top_logo.local_path:
+            logo_str = top_logo.local_path
+        else:
+            logo_str = f"{top_logo.url}  (not found)"
+        print(f"Logo:          {logo_str}")
+    else:
+        print("Logo:          not found")
+    
+    # Subdomains
+    if brand_profile.infrastructure and brand_profile.infrastructure.discovered_subdomains:
+        count = len(brand_profile.infrastructure.discovered_subdomains)
+        print(f"Subdomains:    {count} discovered via crt.sh")
+    else:
+        print("Subdomains:    none found")
+    
+    print("-" * 30)
+    print(f"Output written to {output_file}")
+    print()
+
+
 def main() -> None:
     """Main CLI entry point."""
     # Load environment variables
@@ -175,7 +245,7 @@ def main() -> None:
     
     # Write brand profile to JSON file with timestamp
     timestamp = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d_%H-%M-%S")
-    output_file = output_dir / f"brand_profile_{timestamp}.json"
+    output_file = output_dir / f"brand_profile_{args.company.lower()}_{timestamp}.json"
     try:
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(brand_profile.model_dump_json(indent=2))
@@ -183,19 +253,8 @@ def main() -> None:
         print(f"Error: Could not write output file: {e}", file=sys.stderr)
         sys.exit(1)
     
-    # Print summary
-    num_pages = len(pages)
-    print(f"Brand profile generated for {args.company}")
-    print(f"- Scraped {num_pages} page(s)")
-    if brand_signals:
-        print(f"- Extracted brand signals (description, {len(brand_signals.keywords)} keywords, {len(brand_signals.key_people)} people, {len(brand_signals.logo_candidates)} logo candidates)")
-    else:
-        print("- Brand signals extraction skipped (no OpenAI API key or extraction failed)")
-    if infrastructure and infrastructure.discovered_subdomains:
-        print(f"- Discovered {len(infrastructure.discovered_subdomains)} subdomain(s) via crt.sh")
-    else:
-        print("- No subdomains discovered (crt.sh query failed or returned no results)")
-    print(f"- Output: {output_file}")
+    # Print formatted summary
+    print_summary(brand_profile, output_file)
 
 
 if __name__ == "__main__":
