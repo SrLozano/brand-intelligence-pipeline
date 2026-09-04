@@ -1,199 +1,109 @@
-# 🛡️ Brand Intelligence Pipeline
+# Brand Intelligence Pipeline
 
-An automated brand protection onboarding system that takes minimal input (company name + domain) and automatically discovers brand signals. Built to solve the problem of manual brand intelligence gathering described in [`problem.md`](problem.md).
+Brand Intelligence Pipeline is a Python CLI for building structured brand profiles from a company name and a seed domain. It collects public web signals, discovers certificate-backed subdomains, extracts brand information with an LLM, and exports the result as validated JSON.
 
-## 📖 Overview
+The project is designed as a foundation for brand monitoring, digital risk, trust and safety, and investigation workflows where analysts need a consistent first-pass view of an organisation's public footprint.
 
-This pipeline automates the discovery and extraction of brand signals for brand protection services. Instead of manually researching companies, the system automatically:
+## Capabilities
 
-- 🌐 Scrapes relevant web pages (homepage, about, leadership, Wikipedia)
-- 🔍 Discovers subdomains via certificate transparency logs
-- 🤖 Extracts brand signals using AI (description, keywords, key people, logos)
-- 🖼️ Downloads and stores logo images
-- 📄 Generates structured JSON output with all discovered information
+- Collects content and image metadata from a company's homepage and common corporate pages.
+- Enriches company context with public Wikipedia data when available.
+- Discovers subdomains observed in Certificate Transparency logs through `crt.sh`.
+- Extracts a company description, business keywords, key people, and logo candidates using structured LLM output.
+- Downloads the highest-ranked logo candidates for local review.
+- Validates and serialises the complete profile with Pydantic.
+- Produces partial results when individual external sources are unavailable.
 
-### 🎯 Problem Solved
-
-**Before:** Customers had to manually provide:
-- Brand/product logos (images)
-- List of owned domains
-- Business keywords
-- Names and faces of key people
-
-**After:** Just provide company name + one domain, and the pipeline automatically discovers:
-- ✅ Additional owned domains (via subdomain discovery)
-- ✅ Brand logos (extracted and downloaded)
-- ✅ Business keywords (AI-extracted from content)
-- ✅ Key people and their roles (AI-extracted)
-
-## 🏗️ Architecture
+## Architecture
 
 ```mermaid
-graph TD
-    A[👤 User Input<br/>Company + Domain] --> B[🌐 Web Scraper]
-    B --> C[📄 Homepage]
-    B --> D[ℹ️ About Page]
-    B --> E[👔 Leadership Page]
-    B --> F[📚 Wikipedia]
-    
-    C --> G[🤖 AI Intelligence<br/>OpenAI GPT-5.4]
-    D --> G
-    E --> G
-    F --> G
-    
-    G --> H[📝 Brand Description]
-    G --> I[🏷️ Keywords]
-    G --> J[👥 Key People]
-    G --> K[🎨 Logo URLs]
-    
-    K --> L[⬇️ Logo Downloader]
-    L --> M[💾 Local Storage<br/>output/assets/]
-    
-    A --> N[🔐 Subdomain Discovery<br/>crt.sh]
-    N --> O[🌍 Domain List]
-    
-    H --> P[📦 JSON Output<br/>Brand Profile]
-    I --> P
-    J --> P
-    M --> P
-    O --> P
-    
-    style A fill:#e1f5ff
-    style G fill:#fff4e1
-    style P fill:#e8f5e9
+flowchart LR
+    CLI[CLI input] --> WEB[Web collection]
+    CLI --> CT[Certificate Transparency]
+    WEB --> EXTRACT[Structured extraction]
+    EXTRACT --> ASSETS[Asset download]
+    WEB --> PROFILE[Brand profile]
+    CT --> PROFILE
+    EXTRACT --> PROFILE
+    ASSETS --> PROFILE
+    PROFILE --> JSON[Timestamped JSON output]
 ```
 
-### 📂 Module Structure
+| Component | Responsibility |
+|---|---|
+| `main.py` | CLI, orchestration, asset download, and JSON output |
+| `pipeline/scraper.py` | Website and Wikipedia collection |
+| `pipeline/discovery.py` | Certificate Transparency subdomain discovery |
+| `pipeline/intelligence.py` | LLM extraction with a strict JSON schema |
+| `pipeline/models.py` | Typed domain model and output validation |
 
-- **`main.py`** - Entry point and orchestration of the pipeline
-- **`pipeline/scraper.py`** - Web scraping functionality with BeautifulSoup
-- **`pipeline/discovery.py`** - Subdomain discovery via crt.sh certificate transparency
-- **`pipeline/intelligence.py`** - OpenAI-powered brand signal extraction
-- **`pipeline/models.py`** - Pydantic data models for validation and structure
+See [Architecture](docs/architecture.md) for design decisions and operational limitations.
 
-## ✨ Key Features
+## Quick start
 
-### 🌐 Automated Web Scraping
-- Homepage content extraction
-- About page analysis
-- Leadership/team page discovery
-- Wikipedia integration
-- Respects rate limits (1-second delays)
+Requirements:
 
-### 🔍 Subdomain Discovery
-- Certificate Transparency log analysis via crt.sh
-- Discovers all domains owned by the company
-- Helps identify the full digital footprint
+- Python 3.10 or newer
+- An OpenAI API key for brand-signal extraction
 
-### 🤖 AI-Powered Extraction
-- **Company Description**: Concise brand summary
-- **Keywords**: Business-relevant terms and product categories
-- **Key People**: Names, roles, and descriptions of executives/founders
-- **Logo Detection**: Identifies and ranks logo candidates
-
-### 🖼️ Logo Management
-- Automatic download of top logo candidates
-- Local storage in `output/assets/`
-- Structured metadata with file paths
-- Multiple format support (PNG, JPG, SVG, etc.)
-
-## 🛠️ Technology Stack
-
-- **Python 3.8+** - Core language
-- **BeautifulSoup4** - Web scraping and HTML parsing
-- **OpenAI API** - LLM-based brand signal extraction (GPT-4)
-- **Pydantic** - Data validation and modeling
-- **Requests** - HTTP operations and web requests
-
-## 🚀 Quick Start
-
-See [`how_to_run.md`](how_to_run.md) for detailed setup and usage instructions.
-
-**Basic usage:**
 ```bash
+git clone https://github.com/SrLozano/brand-intelligence-pipeline.git
+cd brand-intelligence-pipeline
+
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+export OPENAI_API_KEY="your-api-key"
 python main.py --company "Nike" --domain "nike.com"
 ```
 
-**What you get:**
-```
-✅ Brand profile generated for Nike
-   - Scraped 4 page(s)
-   - Extracted brand signals (description, 15 keywords, 3 people, 2 logos)
-   - Discovered 47 subdomain(s)
-   - Downloaded 2 logo(s)
-   - Output: output/brand_profile_nike_2026-03-22_19-30-45.json
-```
+The collector and subdomain discovery can still run without an API key, but `brand_signals` will be empty.
 
-## 📦 Output
+## Configuration
 
-The pipeline generates two types of output:
+| Variable | Default | Purpose |
+|---|---|---|
+| `OPENAI_API_KEY` | None | Enables LLM-based signal extraction |
+| `OPENAI_MODEL` | `gpt-5.4-nano` | Selects the extraction model |
+| `REQUEST_TIMEOUT` | `10` | Timeout in seconds for website and Wikipedia requests |
+| `CRTSH_TIMEOUT` | `30` | Timeout in seconds for `crt.sh` requests |
+| `USER_AGENT` | Browser-like default | Overrides the HTTP User-Agent header |
 
-### 📄 JSON Profile
-**Location:** `output/brand_profile_{company}_{timestamp}.json`
+Environment variables may be exported by the shell or loaded from a local `.env` file. Secrets and generated output are excluded from version control.
 
-**Contains:**
-- Company information and domain
-- Discovered subdomains (full list)
-- Scraped page content
-- AI-extracted brand signals:
-  - Company description
-  - Business keywords
-  - Key people (names, roles, descriptions)
-  - Logo candidates with URLs and local paths
-- Metadata and timestamps
+## Output
 
-### 🖼️ Logo Images
-**Location:** `output/assets/`
+Each run writes a timestamped profile to:
 
-**Format:** `{company}_logo_{index}_{timestamp}.{extension}`
-
-Top 3 logo candidates automatically downloaded and referenced in the JSON output.
-
-## 🎯 What Gets Automated
-
-| Manual Task (Before) | Automated Solution (After) |
-|---------------------|---------------------------|
-| Provide domain list | Subdomain discovery via crt.sh |
-| Upload logo images | AI detection + automatic download |
-| List business keywords | AI extraction from web content |
-| Identify key people | AI extraction from leadership pages |
-| Write company description | AI-generated from scraped content |
-
-## 📊 Example Output Structure
-
-```json
-{
-  "company": "Nike",
-  "domain": "nike.com",
-  "infrastructure": {
-    "subdomains": ["www.nike.com", "store.nike.com", "..."]
-  },
-  "brand_signals": {
-    "description": "Global athletic footwear and apparel company...",
-    "keywords": ["athletic footwear", "sportswear", "..."],
-    "key_people": [
-      {
-        "name": "John Donahoe",
-        "role": "CEO",
-        "description": "President and CEO since 2020"
-      }
-    ],
-    "logos": [
-      {
-        "url": "https://nike.com/logo.png",
-        "local_path": "output/assets/nike_logo_0_2026-03-22_19-30-45.png",
-        "confidence": "high"
-      }
-    ]
-  }
-}
+```text
+output/brand_profile_{company}_{timestamp}.json
 ```
 
-## 🔮 Future Enhancements
+Downloaded assets are stored in `output/assets/`. A profile contains:
 
-- Social media profile discovery
-- Product catalog extraction
-- Brand color palette detection
-- Competitor analysis
-- Real-time monitoring integration
-- Multi-language support
+- the input company and domain;
+- URLs successfully collected during the run;
+- observed subdomains and their source;
+- extracted description, keywords, people, and logo candidates;
+- local paths for assets downloaded successfully;
+- generation metadata.
+
+The JSON schema is defined by the Pydantic models in `pipeline/models.py`.
+
+## Data quality and scope
+
+The output is discovery-oriented, not an authoritative ownership record. Certificate Transparency entries show that a hostname appeared on a certificate; they do not prove current control or ownership. LLM-extracted signals and downloaded assets should be reviewed before they drive enforcement or customer-facing decisions.
+
+Network failures are isolated so that a run can return partial data. This favours availability, but production deployments should add structured logging, retries, observability, and explicit quality thresholds.
+
+## Documentation
+
+- [Product brief](docs/product-brief.md)
+- [Architecture and design decisions](docs/architecture.md)
+- [Operations guide](docs/operations.md)
+- [Roadmap](docs/roadmap.md)
+
+## Responsible use
+
+Only collect publicly available information and respect applicable website terms, rate limits, privacy obligations, and local law. The pipeline is intended to support investigation and review, not to make automated claims of affiliation, ownership, infringement, or malicious intent.
